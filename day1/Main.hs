@@ -16,15 +16,13 @@ main = do
 -- For one, I have overlooked that (a + b + c) < (b + c + d) <==> a < d.
 -- with that, our solution can be reduced to one and the same problem
 
+-- The second improvement is to use `zipWith`! and then sum up the @Bool@s...
+
 -- this would actually be @(Ord b, Num a) => [b] -> a@,
 -- but we are restricting it for clarity
 method :: Int -> [Int] -> Int
-method window d = foldl counter 0 $ zip d (drop window d)
-  where
-    counter :: Int -> Position -> Int
-    counter i (a,b)
-        | a < b     = i + 1
-        | otherwise = i
+method window d =  sum $ oneIfTrue <$> zipWith (<) d (drop window d)
+  where oneIfTrue = fromEnum
 
 problem2 :: [Int] -> Int
 problem2 = method 3
