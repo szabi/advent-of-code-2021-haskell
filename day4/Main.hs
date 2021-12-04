@@ -3,7 +3,7 @@
 
 module Main where
 
-import Common
+import Common (Board)
 import Problem (problem1, problem2)
 
 -- This `split` is generalized from `GHC.Utils.Misc`
