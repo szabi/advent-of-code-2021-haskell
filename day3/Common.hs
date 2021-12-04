@@ -1,9 +1,19 @@
 module Common (
     parseBit,
-    evaluate
+    evaluate,
+    invert
 ) where
 
 import Data.List (singleton)
+
+--- While we could write `invert x = (1 - x)`, we make it slightly more
+--- robust: we'll notice if we made a mistake. In a large application
+--- `undefined` is usually *less* robust, not so in this scripty solution.
+invert :: Int -> Int
+invert 0 = 1
+invert 1 = 0
+invert _ = undefined
+
 
 -- as always with these AoC problems, we approach this scripty.
 -- we assume input is not malformed, so we can use "read"

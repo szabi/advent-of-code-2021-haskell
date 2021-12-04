@@ -2,15 +2,7 @@
 module Problem1 where
 
 import Data.List (transpose)
-import Common
-
--- While we could write `invert x = (1 - x)`, we make it slightly more
--- robust: we'll notice if we made a mistake. In a large application
--- `undefined` is usually *less* robust, not so in this scripty solution.
-invert :: Int -> Int
-invert 0 = 1
-invert 1 = 0
-invert _ = undefined
+import Common ( parseBit, evaluate, invert )
 
 problem1 :: [String] -> (Int, Int) -- gamma, epsilon
 problem1 input =

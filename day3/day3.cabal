@@ -27,6 +27,10 @@ executable day3
     -- Modules included in this executable, other than Main.
     other-modules: Problem1.Overengineered
                  , Problem1
+                 , Problem2.Topaz
+                 , Problem2.StriderVC
+                 , Problem2.Cavalieri
+                 , Problem2.Pwm
                  , Common
 
     -- LANGUAGE extensions used by modules in this package.
