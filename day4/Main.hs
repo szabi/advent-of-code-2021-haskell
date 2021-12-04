@@ -5,6 +5,10 @@ module Main where
 
 import Common (Board)
 import Problem (problem1, problem2)
+import qualified Problem.Cavalieri as Cavalieri (problem1, problem2)
+import qualified Problem.Topaz as Topaz (problem1, problem2)
+import qualified Problem.Chinn as Chinn (problem1, problem2)
+import qualified Problem.JHidding as JHidding
 
 -- This `split` is generalized from `GHC.Utils.Misc`
 -- GHC.Utils.Misc.split is typed  :: Char -> String -> [String]
@@ -35,8 +39,27 @@ main = do
         -- calculation
         let (winningBoard , lastrandom) = Problem.problem1 r b
         putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
-
         let (loosingBoard , itsWinning) = Problem.problem2 r b
+        putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
+
+        let (winningBoard , lastrandom) = Cavalieri.problem1 r b
+        putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
+        let (loosingBoard , itsWinning) = Cavalieri.problem2 r b
+        putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
+
+        let (winningBoard , lastrandom) = Topaz.problem1 r b
+        putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
+        let (loosingBoard , itsWinning) = Topaz.problem2 r b
+        putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
+
+        let (winningBoard , lastrandom) = Chinn.problem1 r b
+        putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
+        let (loosingBoard , itsWinning) = Chinn.problem2 r b
+        putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
+
+        let (winningBoard , lastrandom) = JHidding.problem1 r b
+        putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
+        let (loosingBoard , itsWinning) = JHidding.problem2 r b
         putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
 
 
