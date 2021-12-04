@@ -4,7 +4,7 @@
 module Main where
 
 import Common
-import Problem1 (problem1)
+import Problem (problem1, problem2)
 
 -- This `split` is generalized from `GHC.Utils.Misc`
 -- GHC.Utils.Misc.split is typed  :: Char -> String -> [String]
@@ -33,8 +33,11 @@ main = do
         let b :: [Board] = (fmap . fmap . fmap) (read @Int) $ (fmap . fmap) (filter (/="") . split ' ') boards
         let r :: [Int] = read @Int <$> split ',' (head random)
         -- calculation
-        let (winningBoard , lastrandom) = Problem1.problem1 r b
+        let (winningBoard , lastrandom) = Problem.problem1 r b
         putStrLn $ tell 1 "" (evaluate winningBoard) lastrandom
+
+        let (loosingBoard , itsWinning) = Problem.problem2 r b
+        putStrLn $ tell 2 "" (evaluate loosingBoard) itsWinning
 
 
 tell :: Int -> String -> Int -> Int -> String

@@ -1,4 +1,4 @@
-module Problem1 (problem1) where
+module Problem (problem1, problem2) where
 
 import Common
 import Data.List (transpose)
@@ -20,3 +20,18 @@ boardWins :: Board -> Bool
 boardWins b = checkRow b || (checkRow . transpose) b
     where
         checkRow = any (all (<0))
+
+problem2 :: [Int] -> [Board] -> (Board, Int)
+problem2 [] _ = error "no winner!"
+problem2 (r : rs) bs = case nonWonBs of
+    [wb] -> problem1 rs nonWonBs
+    wb : wbs -> problem2 rs nonWonBs
+    _ -> error "should not happen!"
+  where
+    newBs = applyDeep markHit bs
+    nonWonBs = filter (not . boardWins) newBs
+    applyDeep = fmap . fmap . fmap
+    markHit x
+        | x == r    = -1
+        | otherwise = x
+
