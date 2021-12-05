@@ -3,27 +3,18 @@ module Problem.Cavalieri (problem1, problem2) where
 import Common
 import Data.List (transpose)
 
+problem1 = firstWinningBoard
+problem2 = lastWinningBoard
+
 -- this one is a translation of
 -- <https://github.com/giacomocavalieri/aoc-2021/blob/main/src/Days/Day4.hs>
 --
--- I am not particularly impressed by this one, see other examples, but I find
--- it interesting *how* Giacomo extracted the common logic out into a generic
--- function.
+-- In spririt, this is similar to my solution, but the way he abstracted
+-- out a common core is impressive. It looks pleasing, though the output
+-- type of `drawUntilOneWins` is quite a monster.
 --
--- I don't think it improves readability, but it is an interesting technique
--- to study.
+-- Is this kind of generalization worth it? Does it increase readability?
 
-drawNumber :: Int -> Board -> Board
-drawNumber n = map (map switchToDrawn)
-    where switchToDrawn x | x == n    = -1
-                          | otherwise =  x
-
-isDrawn :: Int -> Bool
-isDrawn = (<0)
-
-isWinning :: Board -> Bool
-isWinning board = any isRowComplete board || any isRowComplete (transpose board)
-    where isRowComplete = all isDrawn
 
 -- Keep drawing numbers until one (or more) winning board is found, returns:
 -- * the last extracted number
@@ -34,17 +25,15 @@ drawUntilOneWins :: [Int] -> [Board] -> (Int, [Int], Board, [Board])
 drawUntilOneWins (n:ns) boards = case winningBoards of
     (board:_) -> (n, ns, board, losingBoards)
     []        -> drawUntilOneWins ns boards'
-    where boards'       = map (drawNumber n) boards
-          winningBoards = filter isWinning boards'
+    where boards'       = updateWith n <$> boards
+          winningBoards = filter winning boards'
           losingBoards  = filter (not . flip elem winningBoards) boards'
 
-problem1 = firstWinningBoard
-firstWinningBoard :: [Int] -> [Board] -> (Board, Int)
+firstWinningBoard :: [Int] -> [Board] -> Output
 firstWinningBoard ns boards = (board, n)
     where (n, _, board, _) = drawUntilOneWins ns boards
 
-problem2 = lastWinningBoard
-lastWinningBoard :: [Int] -> [Board] -> (Board, Int)
+lastWinningBoard :: [Int] -> [Board] -> Output
 lastWinningBoard ns boards
     | null boards' = (winningBoard, winningNumber)
     | otherwise    = lastWinningBoard ns' boards'

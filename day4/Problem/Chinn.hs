@@ -13,6 +13,11 @@ import Data.Foldable (foldlM)
 -- <https://github.com/brandonchinn178/advent-of-code/blob/main/2021/Day04.hs>
 --
 -- The use of `Down` is interesting and to study. Compare to Topaz and Cavalieri
+-- Also study the
+-- > either Just (const Nothing) $
+-- >   foldlM go initialRoundInfo calledNumAndRoundNums
+-- rows and the "short-circuiting" behaviour. You can learn about the `Either`
+-- monad from this example!
 
 data RoundInfo = RoundInfo
   { board :: Board
@@ -55,15 +60,9 @@ roundsToWin nums boardVals =
 
     go :: RoundInfo -> (Int, Int) -> Either RoundInfo RoundInfo
     go RoundInfo{board} (calledNum, roundNum) =
-      let newBoard = fmap (setNum calledNum) <$> board
+      let newBoard = updateWith calledNum board
           roundInfo = RoundInfo{board = newBoard, ..}
-       in if isWinner newBoard
+       in if winning newBoard
             then Left roundInfo -- short-circuit when board wins
             else Right roundInfo
 
-    setNum :: Int -> Int -> Int
-    setNum num x = if num == x then -1 else x
-
-
-isWinner :: Board -> Bool
-isWinner board = any (all (<0)) board || any (all (<0)) (transpose board)

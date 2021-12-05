@@ -5,7 +5,8 @@ import Common
 import Data.List (transpose, partition)
 import Data.Tuple (swap)
 
-type Winner = (Int, Board) -- winning number, won sate
+problem1 = solutionA
+problem2 = solutionB
 
 -- this one is a translation of
 -- <https://github.com/jhidding/aoc2021/blob/main/lit/day04.md>
@@ -25,32 +26,17 @@ type Winner = (Int, Board) -- winning number, won sate
 -- I came up with. After also solving part B, it turns out this is the most
 -- elegant and generic way to do it. The function winners generates a list
 -- of (Int, Board) pairs, giving in order each board winning and on what number:
-winSeq :: [Int] -> [Board] -> [Winner]
+winSeq :: [Int] -> [Board] -> [Output]
 winSeq []       _       = []
 winSeq _        []      = []
-winSeq (d:draws) boards = map (d,) winners <> winSeq draws losers
-    where (winners, losers) = partition win $ markBoard d <$> boards
-
-win :: Board -> Bool
-win b = rows || columns
-    where rows    = any (all (<0)) b
-          columns = any (all (<0)) (transpose b)
-
-markBoard :: Int -> Board -> Board
-markBoard n b = fmap (markEq n) <$> b
-
-markEq ::  Int -> Int -> Int
-markEq v x
-    | v == x    = -1
-    | otherwise = x
+winSeq (d:draws) boards = map (,d) winners <> winSeq draws losers
+    where (winners, losers) = partition winning $ updateWith d <$> boards
 
 -- Solution
 
-problem1 = solutionA
 solutionA :: [Int] -> [Board] -> Output
-solutionA draws boards = swap $ head (winSeq draws boards)
+solutionA draws boards = head (winSeq draws boards)
 
-problem2 = solutionB
 solutionB:: [Int] -> [Board] -> Output
-solutionB draws boards = swap $ last (winSeq draws boards)
+solutionB draws boards = last (winSeq draws boards)
 

@@ -9,32 +9,24 @@ import Data.Ord (comparing)
 --
 -- An interesting approach, different than most. Again, I'm not particularly impressed by its
 -- structure or readability, but I'd like to study it. Definitely a novel approach.
+--
+-- Copmare to JHidding!
 
-type SelectionCriterion = (Winner -> Winner  -> Ordering) -> [Winner] -> Winner
-type Winner = (Int, Board) -- winning number, won sate
+type SelectionCriterion = (Output -> Output  -> Ordering) -> [Output] -> Output
 
-problem1 :: [Int] -> [Board] -> (Board, Int)
+problem1 :: [Int] -> [Board] -> Output
 problem1 = selectBoard firstWinner
     where firstWinner = minimumBy
-problem2 :: [Int] -> [Board] -> (Board, Int)
+problem2 :: [Int] -> [Board] -> Output
 problem2 = selectBoard lastWinner
     where lastWinner = maximumBy
 
-selectBoard :: SelectionCriterion -> [Int] -> [Board] -> (Board, Int)
+selectBoard :: SelectionCriterion -> [Int] -> [Board] -> Output
 selectBoard selector order bingos = ( selectedBingo  , order !! (idx - 1) )
  where
-  (idx, selectedBingo) =
-    selector (comparing fst) $ map (`getFirstBingo` order) bingos
+  (selectedBingo, idx) =
+    selector (comparing snd) $ map (`getFirstBingo` order) bingos
 
-getFirstBingo :: Board -> [Int] -> Winner
+getFirstBingo :: Board -> [Int] -> Output
 getFirstBingo bingo =
-  head . filter (checkBingo . snd) . zip [0 ..] . scanl markNumber bingo
-
-markNumber :: Board -> Int -> Board
-markNumber bingo number =
-  map (map (\n -> if n == number then -1 else n)) bingo
-
-checkBingo :: Board -> Bool
-checkBingo bingo = row || column
- where row    = any (all (<0)) bingo
-       column = any (all (<0)) $ transpose bingo
+  head . filter (winning . fst) . (`zip` [0 ..]) . scanl (flip updateWith) bingo
