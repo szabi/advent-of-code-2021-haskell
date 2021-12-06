@@ -4,4 +4,4 @@ module Common (
 ) where
 
 type Input = [Int]
-type Output = Integer
+type Output = Int

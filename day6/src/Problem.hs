@@ -1,51 +1,37 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE MultiWayIf #-}
+
 module Problem (problem1, problem2) where
 
 import Common
-import Data.List (group, groupBy, sort, sortOn)
+import Data.MultiSet (MultiSet, size, concatMap, fromList)
+import Prelude hiding (concatMap)
 
-problem1 = problem 80 -- we want to get the result after 80 days
-problem2 = problem 256
+problem1 :: Input -> Output
+problem1 fs = countAllFish (swarmAtDay fs !! 80) -- we want to get the result after 80 days
+problem2 :: Input -> Output
+problem2 fs = countAllFish (swarmAtDay fs !! 256)
 
-type Days = Int
-type Fish = Integer -- the number of fish. We go straight for `Integer`,
-                    -- this is clearly an overflow problem now.
-type CompactFish = (Days, Fish)
-type CompactSwarm = [CompactFish]
+type Fish = Int
+type CompactSwarm = MultiSet Fish -- the keys are the age in days of the fish.
 
-problem :: Days -> Input -> Output
-problem i fs = countFish $ go i (toHistogram fs)
-  where go :: Int -> CompactSwarm -> CompactSwarm
-        go 0 fs = fs -- fs stands for "fish (pl.)"
-        go i fs | i < 0 = error $ "We can only estimate the number of fish for " <>
-                                  "future days, not back into the past!"
-                | otherwise = let newFish =  (\(x,y) -> (8,y)) <$> filter ((==0) . fst) fs
-                                  agedFish = ageFish <$> fs
-                                  newSwarm =  (agedFish <++> newFish)
-                              in go (i-1) newSwarm
+-- This was translated from /u/StephenSwat's solution
+-- <https://www.reddit.com/r/haskell/comments/r9z4qb/advent_of_code_2021_day_06/hng5ohl/>
+--
+-- using `MultiSet` is even more elegant than using a `Map`!
 
-ageFish :: CompactFish -> CompactFish
-ageFish (0,i) = (6,i)
-ageFish (x,i) | x < 0 = error "This should not have happened. You screwed up."
-              | otherwise = (x-1, i)
+swarmAtDay :: [Fish] -> [CompactSwarm]
+swarmAtDay fs = iterate advanceDay (fromList fs)
 
-countFish :: CompactSwarm -> Integer
-countFish fs = sum (snd <$> fs)
+advanceDay :: CompactSwarm -> CompactSwarm
+advanceDay = concatMap (\i -> if i == 0 then [6, 8]
+                                        else [i - 1])
 
--- This was taken from day **5**, /u/brandonchinn178
--- <https://old.reddit.com/r/haskell/comments/r982ip/advent_of_code_2021_day_05/hnaj21z/>
-toHistogram :: (Integral b, Ord a) => [a] -> [(a, b)]
-toHistogram = map collect . group . sort
-  where
-    collect xs@(x:_) = (x, fromIntegral (length xs))
+-- this is just a rename to make lines 12 and 13 even more
+-- directly readable
+countAllFish :: CompactSwarm -> Fish
+countAllFish = size
 
--- We certainly could create a newtype and define a semigroup on CompactFish,
--- but that's left for a refactor.
-(<++>) :: [CompactFish] -> [CompactFish] -> CompactSwarm
-s1 <++> s2 = compress (s1 ++ s2)
-  where
-    compress :: CompactSwarm -> CompactSwarm
-    compress = map sumup . groupBy (\ x y -> fst x == fst y) . (sortOn fst)
-    sumup :: [CompactFish] -> CompactFish
-    sumup fs@(f:_) = (fst f, sum (snd <$> fs))
+-- /u/Tarmen's solution <https://www.reddit.com/r/haskell/comments/r9z4qb/advent_of_code_2021_day_06/hng4n4p/>
+-- is also nice.
