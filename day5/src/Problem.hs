@@ -1,42 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE TupleSections #-}
 module Problem (problem1, problem2) where
 
 import Common
 import Data.Maybe ( mapMaybe)
 import Data.List (group, sort)
 
-data Line = Vertical   { x1 :: Int, x2 :: Int, y0 :: Int }
-          | Horizontal { x0 :: Int, y1 :: Int, y2 :: Int }
-          | RDiagonal   { x1 :: Int, y1 :: Int, x2 :: Int, y2 ::Int }
-          | LDiagonal   { x1 :: Int, y1 :: Int, x2 :: Int, y2 ::Int }
-
--- This validates line:
--- it guarantees that for the heterogenous component a1 <= a2
--- This property allows us to use list comprehension in expand.
---
--- Usually, `Line` and `line` would be in a library and only
--- `line` exported as a smart constructor. We do not move it
--- to our module "Common" here, so that the code stays easily
--- pastable and self-containing for sharing.
-line :: Coord -> Coord -> Line
-line (Coord x1 y1) (Coord x2 y2)
-    | x1 == x2  = Horizontal x1 (min y1 y2) (max y1 y2)
-    | y1 == y2  = Vertical   (min x1 x2) (max x1 x2) y1
-    -- for diagonal, there is no natural sorting in 2D space.
-    -- however, we fortunately won't need this to expand our
-    -- line
-    | abs (x2 - x1) /= abs (y2 - y1) = error "invalid input!"
-    | signum (x2 - x1) == signum (y2 - y1) = RDiagonal (min x1 x2) (min y1 y2) (max x1 x2) (max y1 y2)
-    -- convention: x is in order
-    | otherwise                      = LDiagonal (min x1 x2) (max y1 y2) (max x1 x2) (min y1 y2)
+type Line = (Coord, Coord)
 
 isStraight :: Line -> Bool
-isStraight = not . isDiagonal
-isDiagonal :: Line -> Bool
-isDiagonal (RDiagonal {} ) = True
-isDiagonal (LDiagonal {} ) = True
-isDiagonal _ = False
+isStraight (Coord x1 y1, Coord x2 y2) = x1 == x2 || y1 == y2
+
 
 problem1 = problem isStraight
 problem2 = problem all
@@ -45,22 +20,44 @@ problem2 = problem all
 problem :: (Line -> Bool) -> Input -> Output
 problem valid cps = let
     -- hydrothermal vent lines
-    validVentLines :: [Line] =  filter valid $ uncurry line <$> cps
+    validVentLines :: [Line] =  filter valid cps
     -- coordinates hit by all lines. With multiplicities
 
     coords = concat $ expand <$> validVentLines
     grouped = group $ sort coords
     dangerous = filter ((>1) . length) grouped
+    -- We have finished it with filtering for length >1 here.
+    -- we could have further processed the list to make it more
+    -- robust for further changes and make it more readable, like
+    -- using a further "collect" on the above dangerous list:
+    --
+    -- cf. <https://github.com/brandonchinn178/advent-of-code/blob/main/2021/Day05.hs>
+    -- toHistogram :: Ord a => [a] -> [(a, Int)]
+    --toHistogram = map collect . group . sort
+    --  where
+    --    collect xs@(x:_) = (x, length xs)
   in length dangerous
 
--- This implementation uses the property that the two heterogenous
--- coordinates of the line are always in sorted order!
--- 
--- That is, it will only work reliably with 'Line's created with
--- the smart constructor 'line'.
-expand :: Line -> [Coord]
-expand (Vertical   x1 x2 y0)   = [Coord x y0 | x <- [x1..x2] ]
-expand (Horizontal x0 y1 y2)   = [Coord x0 y | y <- [y1..y2] ]
-expand (RDiagonal x1 y1 x2 y2) = [Coord x  y | x <- [x1..x2] | y <- [y1..y2]] 
-expand (LDiagonal x1 y1 x2 y2) = [Coord x  y | x <- [x1..x2] | y <- [y1,y1-1..y2]] 
+-- Compared to our original solution, we simplify the handling by following the
+-- custome 'range' function (instead of builtin [a..b]), as inspired by
+-- <https://old.reddit.com/r/haskell/comments/r982ip/advent_of_code_2021_day_05/hnaju7a/>
 
+-- This implementation uses the property that only
+-- 45° diagonal lines are allowed in the input by
+-- specification!
+expand :: Line -> [Coord]
+expand (Coord x1 y1, Coord x2 y2)
+  | x1 == x2 = map (uncurry Coord . (x1,)) (range y1 y2) -- horizontal line
+  | y1 == y2 = map (uncurry Coord . (,y1)) (range x1 x2) -- vertical line
+  | otherwise = zipWith Coord (range x1 x2) (range y1 y2)
+
+
+range :: Int -> Int -> [Int]
+range a b
+  | a < b = [a..b]
+  | otherwise = [a,(a-1)..b]
+
+
+-- NOTE:
+-- another approach to study is <https://github.com/sullyj3/adventOfCode2021/blob/main/src/Day05.hs>
+-- with its monoid 'PointCounter'.
