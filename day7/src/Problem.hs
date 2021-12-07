@@ -1,13 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ParallelListComp #-}
 module Problem (problem1, problem2) where
 
 import Common
-import Data.List (group, groupBy, sort, sortOn)
-import Debug.Trace
 
-
-problem2 = undefined
+problem1 = problem id
+problem2 = problem increasingCost
 
 -- Ok, I thought I was clever, and this was essentially
 -- 
@@ -24,27 +20,41 @@ problem2 = undefined
 --
 -- So, let's indeed bisect :-(
 
-problem1 :: Input -> Output
-problem1 xs = let minx = minimum xs
+type Distance = Int
+type Cost = Int
+type FuelCostFn = Distance -> Cost
+
+problem :: FuelCostFn -> Input -> Output
+problem fuelCost xs = let
+                  minx = minimum xs
                   maxx = maximum xs
                   -- ok, there is something nice to be done with `Arrow` here!
-                  minval = fst $ bisector (minx, maxx) xs
-                  maxval = snd $ bisector (minx, maxx) xs
-                  absDiff1 = absDiff minval xs
-                  absDiff2 = absDiff maxval xs
+                  minval = fst $ bisector fuelCost (minx, maxx) xs
+                  maxval = snd $ bisector fuelCost (minx, maxx) xs
+                  absDiff1 = absDiff fuelCost minval xs
+                  absDiff2 = absDiff fuelCost maxval xs
               in min absDiff1 absDiff2
 
-bisector :: (Int, Int) -> [Int] -> (Int, Int)
-bisector (min, max) xs
+bisector :: FuelCostFn -> (Int, Int) -> Input -> (Int, Int)
+bisector fuelCost (min, max) xs
   | min == max     = (min, min)
   | min == max - 1 = (min, max)
   | otherwise  = let
-      minx = absDiff min xs
-      maxx = absDiff max xs
+      minx = absDiff fuelCost min xs
+      maxx = absDiff fuelCost max xs
       mid = (min + max) `div` 2
-      midx = absDiff mid xs
+      midx = absDiff fuelCost mid xs
       newPair = if minx + midx < maxx + midx then (min, mid) else (mid, max)
-      in trace (show (min, mid, max) <> show (minx, midx, maxx)) $ bisector newPair xs
+      in bisector fuelCost newPair xs
 
-absDiff :: Int -> [Int] -> Int
-absDiff m xs = sum $ map (abs . (m -)) xs
+absDiff :: FuelCostFn -> Distance -> Input -> Cost
+absDiff fuelCost m xs = sum $ map (fuelCost . abs . (m -)) xs
+
+distances :: [Distance]
+distances = [1..]
+
+costs :: [Cost]
+costs = scanl (+) 0 distances
+
+increasingCost :: FuelCostFn
+increasingCost x = costs !! x

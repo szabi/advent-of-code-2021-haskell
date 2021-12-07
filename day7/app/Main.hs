@@ -13,5 +13,5 @@ main = do
 
   let solution1 = problem1 parsedInput
   putStrLn $ "Day 7, Problem 1, direct, double traverse: " <> show solution1
-  -- let solution2 = problem2 parsedInput
-  -- putStrLn $ "Day 7, Problem 2: " <> show solution2
+  let solution2 = problem2 parsedInput
+  putStrLn $ "Day 7, Problem 2: " <> show solution2
