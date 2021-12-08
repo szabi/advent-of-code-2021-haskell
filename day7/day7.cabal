@@ -48,6 +48,7 @@ category:           AoC
 library
     -- Modules exported by the library.
     exposed-modules:  Problem,
+                      Problem.Entertainment,
                       Common,
                       Parse
 
