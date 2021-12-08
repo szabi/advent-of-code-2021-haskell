@@ -12,11 +12,10 @@ import Data.Char (toUpper)
 -- However, I'm already using way too much time for these
 -- advent of code puzzles and spand way too litte with my family
 parseLine :: String ->  Display
-parseLine s = let line = replace "| " "" (toUpper <$> s)
+parseLine s = let line = replace "| " "" s
                   ws = words line
-                  wxs :: [String] = sort <$> ws
-                  wss = (\s -> "[" <> intersperse ',' s <> "]") <$> wxs
-                  ds :: [[Segment]] = (read <$> wss)
+                  -- we don't need sorting: we have a nice ViewPattern
+                  -- wxs :: [String] = sort <$> ws
               -- the input *always* consists of 10 values before the '|'
               -- and 4 after... so we can just ignore the '|'.
-              in  Display (take 10 ds) (drop 10 ds)
+              in  Display (take 10 ws) (drop 10 ws)

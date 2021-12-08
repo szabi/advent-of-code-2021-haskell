@@ -4,29 +4,20 @@ module Common (
     Observation,
     Reading,
     Display(..),
-    Digit(..),
-    Segment(..),
+    Digit,
+    Segment,
     SegmentDigit
 ) where
 
-type SegmentDigit = [Segment]
+type Segment = Char
+type SegmentDigit = String
 type Observation = [SegmentDigit]
 type Reading = [SegmentDigit]
 data Display = Display { observation :: Observation, reading :: Reading } deriving (Read, Show)
+
 type Input = [Display]
 type Output = Int
 
-data Digit = Zero
-           | One
-           | Two
-           | Three
-           | Four
-           | Five
-           | Six
-           | Seven
-           | Eight
-           | Nine
-    deriving (Enum, Show)
+type Digit = Int
 
-data Segment = A | B | C | D | E | F | G deriving (Enum, Show, Eq, Ord, Read)
 
