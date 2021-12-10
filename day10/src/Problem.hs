@@ -1,62 +1,70 @@
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE RecordWildCards #-}
+
 module Problem (problem1, problem2) where
 
 import Common
 import Data.List (elemIndex, sort)
 import Data.Maybe (fromJust, mapMaybe)
 
-problem2 :: [String] -> Int
-problem2 ss = scoreComplete'' $ scoreComplete' . completeStack <$> mapMaybe lineComplete ss
+problem1 = run problem1def
+problem2 = run problem2def
 
-problem1 :: [String] -> Int
-problem1 ss = sum (scoreError <$> mapMaybe lineError ss)
+data ProblemDef a = ProblemDef {
+  finalScore :: [Int] -> Int,
+  lineScore :: a -> Int,
+  lineProcess :: String -> Maybe a
+}
+
+problem2def :: ProblemDef String
+problem2def = ProblemDef {
+  finalScore = \ns -> sort ns !! (length ns `div` 2),
+  lineScore = foldl (\acc c -> acc * 5 + completionScoreOf c) 0,
+  lineProcess = completeStack <.> lineStack
+}
+
+problem1def :: ProblemDef Char
+problem1def = ProblemDef {
+  finalScore = sum,
+  lineScore = closing `mapTo` errorScores,
+  lineProcess = lineError
+}
+
+run :: ProblemDef a -> [String] -> Int
+run ProblemDef{..} ss = finalScore (lineScore <$> mapMaybe lineProcess ss)
 
 type Stack = String
 type Complement = String
 
+opening, closing :: [Char]
+errorScores, completionScores :: [Int]
 opening = "([{<"
 closing = ")]}>"
-
-errorScores :: [Int]
 errorScores = [3,57,1197,25137]
-
-scoreError :: Char -> Int
-scoreError = closing `mapTo` errorScores
-
-scoreComplete :: Char -> Int
-scoreComplete c = case elemIndex c closing of
-    Nothing -> error $ "scoresComplete: invalid char '" <> show c <> "', must be one of " <> show closing
-    Just n  -> n + 1
-
-scoreComplete' :: String -> Int
-scoreComplete' = foldl (\acc c -> acc * 5 + scoreComplete c) 0
-
-scoreComplete'' :: [Int] -> Int
-scoreComplete'' ns = sort ns !! (length ns `div` 2)
+completionScores = [1,2,3,4]
+-- originally I had a function essentially saying `elemIndex + 1`,
+-- but we don't need performance here, and so the code becomes more
+-- uniform, easier to read and understand, less cluttered
 
 lineError :: String -> Maybe Char
 -- returns Nothing if there is no stacking error,
 -- returns the violating character if there is a stacking error.
 lineError = leftToMaybe . buildStack
 
-lineComplete :: String -> Maybe String
+lineStack :: String -> Maybe String
 -- returns Nothing if there is a stack error,
 -- returns a `Just s` if there is a valid completion
-lineComplete = rightToMaybe . buildStack
+lineStack = rightToMaybe . buildStack
+
+-- *
+-- * Stack processing
+-- *
 
 buildStack :: String -> Either Char Stack
-buildStack = foldl stack (Right "")
+buildStack = foldl addTostack (Right "")
 
-leftToMaybe :: Either a b -> Maybe a
-leftToMaybe = either Just (const Nothing)
-
-rightToMaybe :: Either a b -> Maybe b
-rightToMaybe = either (const Nothing) Just
-
-stack :: Either Char Stack -> Char -> Either Char Stack
-stack l@(Left c) _ = l
-stack (Right s) c'
+addTostack :: Either Char Stack -> Char -> Either Char Stack
+addTostack l@(Left c) _ = l
+addTostack (Right s) c'
     | c' `notElem` opening && c' `notElem` closing = error $ "stack: invalid input, must be one of " <> show opening <> " or " <> show closing
     | c' `elem` opening = Right (c' : s)
     | c' `elem` closing = case s of
@@ -71,10 +79,28 @@ completeStack = foldl complete ""
     complete :: Complement -> Char -> Complement
     complete s c = s ++ [closingOf c]
 
+-- *
+-- * Helper and readability
+-- *
+
 closingOf :: Char -> Char
 closingOf = opening `mapTo` closing
+
+completionScoreOf :: Char -> Int
+completionScoreOf = closing `mapTo` completionScores
 
 mapTo :: (Eq a, Show a) => [a] -> [b] -> (a -> b)
 (source `mapTo` target) a
     | a `elem` source = target !! fromJust (elemIndex a source)
     | otherwise = error $ "invalid char: " <> show a <> "', must be one of " <> show source
+
+-- no way I'm pulling in "semigroupoids" for package "either"
+
+leftToMaybe :: Either a b -> Maybe a
+leftToMaybe = either Just (const Nothing)
+
+rightToMaybe :: Either a b -> Maybe b
+rightToMaybe = either (const Nothing) Just
+
+(<.>) :: Functor f => (b -> c) -> (a -> f b) -> a -> f c
+f <.> g = fmap f . g
