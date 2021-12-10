@@ -48,9 +48,8 @@ category:           AoC
 library
     -- Modules exported by the library.
     exposed-modules:  Problem,
-                      Common,
-                      Parse
-
+                      Common
+                      
     -- Modules included in this library but not exported.
     -- other-modules:
 
@@ -59,7 +58,6 @@ library
 
     -- Other library packages from which modules are imported.
     build-depends:    base ^>=4.15.0.0,
-                      extra
 
     -- Directories containing source files.
     hs-source-dirs:   src
