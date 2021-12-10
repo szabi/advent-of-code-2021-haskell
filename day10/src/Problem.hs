@@ -68,9 +68,8 @@ addTostack (Right s) c'
     | c' `notElem` opening && c' `notElem` closing = error $ "stack: invalid input, must be one of " <> show opening <> " or " <> show closing
     | c' `elem` opening = Right (c' : s)
     | c' `elem` closing = case s of
-        (c : cs) -> if elemIndex c' closing == elemIndex c opening
-                    then Right cs
-                    else Left c'
+        (c : cs) -> if matching c c' then Right cs
+                                     else Left c'
         _        -> Left c'
 
 completeStack :: Stack -> Complement
@@ -82,6 +81,9 @@ completeStack = foldl complete ""
 -- *
 -- * Helper and readability
 -- *
+
+matching :: Char -> Char -> Bool
+matching c c' = elemIndex c opening == elemIndex c' closing
 
 closingOf :: Char -> Char
 closingOf = opening `mapTo` closing
